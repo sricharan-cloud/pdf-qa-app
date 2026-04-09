@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "formidable": "^3.5.4",
     "next": "16.2.3",
+    "openai": "^6.34.0",
+    "pdfjs-dist": "^5.6.205",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -20,6 +23,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "playwright": "^1.59.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
