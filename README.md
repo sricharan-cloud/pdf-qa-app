@@ -1,4 +1,4 @@
-# PDF Question Answering App
+# document Question Answering App
 
 This application allows users to upload a PDF document and ask questions about its content. The system extracts text from the document and uses an AI model to generate answers based only on the uploaded document.
 
