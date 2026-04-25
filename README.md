@@ -29,6 +29,32 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Architecture
+
+This application follows a prompt-first (long-context) architecture.
+
+The system extracts text from the uploaded PDF and directly sends it to the OpenAI model along with the user question.
+
+
+## Alternative Approach
+
+A retrieval-based (RAG) system could be used for larger documents. This would involve chunking the document and storing embeddings in a vector database.
+
+This was not implemented because the application handles smaller PDFs.
+
+
+## Improvement
+
+The system was improved by refining the prompt.
+
+Before:
+The model sometimes guessed answers not present in the document.
+
+After:
+The model now responds with "Not found in document" when the answer is missing.
+
+This improved reliability and reduced hallucination.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
