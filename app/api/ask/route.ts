@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 🔥 IMPROVED PROMPT (Assignment 6 requirement)
+    // 🔥 IMPROVED PROMPT 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0, // reduces randomness → more consistent answers
