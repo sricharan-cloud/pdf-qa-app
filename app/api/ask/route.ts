@@ -8,46 +8,69 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: NextRequest) {
-  const { question } = await req.json();
+  try {
+    const { question } = await req.json();
 
-  const filePath =
-  process.env.NODE_ENV === "production"
-    ? "/tmp/data.json"
-    : path.join(process.cwd(), "data.json");
+    if (!question) {
+      return NextResponse.json({
+        answer: "Please provide a question.",
+      });
+    }
 
-  if (!fs.existsSync(filePath)) {
+    const filePath =
+      process.env.NODE_ENV === "production"
+        ? "/tmp/data.json"
+        : path.join(process.cwd(), "data.json");
+
+    if (!fs.existsSync(filePath)) {
+      return NextResponse.json({
+        answer: "Please upload a document first.",
+      });
+    }
+
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const parsed = JSON.parse(raw);
+
+    console.log("Question:", question);
+    console.log("Doc length:", parsed.text?.length);
+
+    if (!parsed.text || parsed.text.length === 0) {
+      return NextResponse.json({
+        answer: "Document is empty or not parsed correctly.",
+      });
+    }
+
+    // 🔥 IMPROVED PROMPT (Assignment 6 requirement)
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0, // reduces randomness → more consistent answers
+      messages: [
+        {
+          role: "system",
+          content: `
+You are a helpful assistant.
+
+Answer ONLY using the provided document.
+If the answer is not in the document, say "Not found in document".
+Do NOT guess or make up information.
+Keep the answer clear and concise.
+`,
+        },
+        {
+          role: "user",
+          content: `Document:\n${parsed.text}\n\nQuestion:\n${question}`,
+        },
+      ],
+    });
+
     return NextResponse.json({
-      answer: "Please upload a document first.",
+      answer: completion.choices[0].message.content,
+    });
+  } catch (error) {
+    console.error("Error:", error);
+
+    return NextResponse.json({
+      answer: "Something went wrong. Please try again.",
     });
   }
-
-  const raw = fs.readFileSync(filePath, "utf-8");
-  const parsed = JSON.parse(raw);
-
-  console.log("Question:", question);
-  console.log("Doc length:", parsed.text.length);
-
-  if (!parsed.text || parsed.text.length === 0) {
-    return NextResponse.json({
-      answer: "Document is empty or not parsed correctly.",
-    });
-  }
-
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content: "Answer ONLY using the provided document.",
-      },
-      {
-        role: "user",
-        content: `Document:\n${parsed.text}\n\nQuestion:\n${question}`,
-      },
-    ],
-  });
-
-  return NextResponse.json({
-    answer: completion.choices[0].message.content,
-  });
 }
