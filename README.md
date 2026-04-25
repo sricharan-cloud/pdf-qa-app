@@ -1,62 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PDF Question Answering App
 
-## Getting Started
+This application allows users to upload a PDF document and ask questions about its content. The system extracts text from the document and uses an AI model to generate answers based only on the uploaded document.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## How It Works
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. User uploads a PDF file  
+2. The system extracts text from the PDF  
+3. The extracted text is stored in a JSON file (`data.json`)  
+4. The user enters a question  
+5. The system sends the document text + question to the OpenAI API  
+6. The model generates an answer  
+7. The answer is displayed in the UI  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
 ## Architecture
 
-This application follows a prompt-first (long-context) architecture.
+This application follows a **prompt-first (long-context)** architecture.
 
-The system extracts text from the uploaded PDF and directly sends it to the OpenAI model along with the user question.
+The full document text is directly included in the prompt sent to the AI model instead of retrieving specific sections.
 
+### Why this approach?
 
-## Alternative Approach
+- Simple to implement  
+- Works well for small PDFs  
+- No need for vector database or embeddings  
 
-A retrieval-based (RAG) system could be used for larger documents. This would involve chunking the document and storing embeddings in a vector database.
+### Tradeoffs
 
-This was not implemented because the application handles smaller PDFs.
+- Large documents may exceed context limits  
+- Higher cost due to large prompts  
+- Slower performance for large inputs  
+- Not scalable for multiple or large documents  
 
+---
+
+## Alternative Approach (Not Implemented)
+
+A **Retrieval-Augmented Generation (RAG)** system could be used.
+
+This would:
+- Split documents into chunks  
+- Store them in a vector database  
+- Retrieve only relevant parts for each question  
+
+### Why not used?
+
+- Adds complexity (chunking, embeddings, storage)  
+- Not needed for small PDFs  
+
+### When to use it?
+
+- For large PDFs  
+- For multiple documents  
+- For scalable systems  
+
+---
+
+## Data Flow
+
+Input:
+- PDF file uploaded by user  
+
+Processing:
+- PDF → text extraction  
+- Text stored in `data.json`  
+
+Model Input:
+- Document text + user question  
+
+Output:
+- AI-generated answer displayed to user  
+
+---
+
+## Evaluation
+
+The system was evaluated using:
+
+### Representative Cases (5)
+- Questions about document content → correct answers  
+
+### Failure Cases (2)
+- Large documents → incomplete answers  
+- Questions not in document → model previously guessed  
+
+### Baseline
+Without document context:
+- Model gives generic answers  
+
+With document context:
+- Model gives accurate answers  
+
+---
+
+## Upstream Component Evaluation
+
+Component: PDF text extraction  
+
+Observation:
+- Some formatting is lost  
+
+Impact:
+- Can reduce answer accuracy  
+
+---
 
 ## Improvement
 
-The system was improved by refining the prompt.
+### Problem
+The model sometimes guessed answers when the information was not in the document.
 
-Before:
-The model sometimes guessed answers not present in the document.
+### Solution
+Updated the prompt to:
 
-After:
-The model now responds with "Not found in document" when the answer is missing.
+- Restrict answers to document only  
+- Return "Not found in document" when missing  
+- Reduce randomness (temperature = 0)  
 
-This improved reliability and reduced hallucination.
+### Result
+- Reduced hallucination  
+- Improved reliability  
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Limitations
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Does not support large PDFs efficiently  
+- No multi-document support  
+- No retrieval system  
+
+---
+
+## Running the Project
+
+```bash
+npm install
+npm run dev
